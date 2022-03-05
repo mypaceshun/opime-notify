@@ -18,6 +18,7 @@ class Schedule:
         self.title = title
         self.date = date
         self.type = type
+        self.description = description
 
     def __str__(self):
         date_str = self.get_date_str()
@@ -97,12 +98,100 @@ class Session:
 
     def fetch_schedule_theatre(self, page: int = 1):
         news_list_el = self.fetch_schedule_list(page=page, category=1)
-        schedule_list = []
+        theatre_schedule_list = []
         for news_el in news_list_el:
             if not isinstance(news_el, Tag):
                 continue
             url = news_el.attrs.get("href", None)
             if isinstance(url, str):
                 schedule = self.fetch_schedule_detail(url)
-                schedule_list.append(schedule)
+                if schedule is None:
+                    continue
+                parser = TheatreNewsParser(schedule)
+                theatre_schedule = parser.parse()
+                theatre_schedule_list += theatre_schedule
+        return theatre_schedule_list
+
+
+class TheatreNewsParser:
+    def __init__(self, schedule: Schedule):
+        self.schedule = schedule
+        self.news_type = self._get_news_type()
+
+    def _get_news_type(self) -> str:
+        type = "special"
+        pattern = r"^\d{4}年\d+月\d+日（.）～.*NGT48劇場 公演スケジュールのご案内"
+        mobj = re.match(pattern, self.schedule.title)
+        if mobj:
+            type = "normal"
+        return type
+
+    def parse(self) -> list[Schedule]:
+        if self.news_type == "normal":
+            return self.parse_normal()
+        return []
+
+    def parse_normal(self) -> list[Schedule]:
+        body_str = self.schedule.description
+        under_keyword = "【チケット申込について】"
+        body_str = body_str.split(under_keyword)[0]
+        date_separator = "●"
+        body_date_list = body_str.split(date_separator)
+        schedule_list = []
+        for body_onedate in body_date_list:
+            schedule_list += self.parse_body_onedate(body_onedate)
         return schedule_list
+
+    def parse_body_onedate(self, onedate_text: str) -> list[Schedule]:
+        closed_keyword = "休館日"
+        if closed_keyword in onedate_text:
+            return []
+        # 先頭行は日付であるとする
+        date_pattern = r"\d+月\d+日"
+        date_format = "%m月%d日"
+        m = re.search(date_pattern, onedate_text)
+        if m is None:
+            return []
+        date_str = m.group(0)
+        onedate = datetime.strptime(date_str, date_format)
+        _date = self.schedule.date
+        year = datetime.now().year
+        if isinstance(_date, datetime):
+            year = _date.year
+        onedate = onedate.replace(year=year)
+        sections = onedate_text.split("\n\n")
+        schedule_list = []
+        for section in sections:
+            schedule = self.parse_section_onedate(section, onedate)
+            if schedule is None:
+                continue
+            schedule_list.append(schedule)
+        return schedule_list
+
+    def parse_section_onedate(
+        self, section_text: str, onedate: datetime
+    ) -> Optional[Schedule]:
+        section_lines = section_text.split("\n")
+        title = ""
+        date = onedate
+        type = "theater"
+        description = ""
+        for line in section_lines:
+            if "昼公演" in line or "夜公演" in line:
+                pattern = r"\d+[：:]\d+"
+                date_format = "%H:%M"
+                m = re.search(pattern, line)
+                if m is None:
+                    continue
+                date_str = m.group(0)
+                date_str = date_str.replace("：", ":")
+                open_date = datetime.strptime(date_str, date_format)
+                date = date.replace(hour=open_date.hour, minute=open_date.minute)
+            elif "演目" in line:
+                separator = "："
+                title = line.split(separator)[-1]
+            elif "出演メンバー" in line or description != "":
+                description += line
+        if title == "" or date == onedate:
+            return None
+        return Schedule(title=title, date=date, type=type, description=description)
