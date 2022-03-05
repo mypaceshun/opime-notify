@@ -53,8 +53,8 @@ jobs:
         run: poetry install
       - name: run test
         run: poetry run poe citest
-        #- name: upload codecov
-        #  uses: codecov/codecov-action@v2
-        #  with:
-        #    fail_ci_if_error: true
-        #    token: ${{ secrets.CODECOV_TOKEN }}
+      - name: upload codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
