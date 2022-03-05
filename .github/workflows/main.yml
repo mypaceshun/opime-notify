@@ -1,0 +1,64 @@
+name: Test
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '*'
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  lint:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: '3.10', python: '3.10', os: ubuntu-latest}
+          - {name: '3.9', python: '3.9', os: ubuntu-latest}
+          - {name: '3.8', python: '3.8', os: ubuntu-latest}
+          - {name: '3.7', python: '3.7', os: ubuntu-latest}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: update pip
+        run: pip install -U pip setuptools wheel
+      - name: install poetry
+        run: pip install poetry poetry-dynamic-versioning
+      - name: install libraries
+        run: poetry install
+      - name: run lint
+        run: poetry run poe lint
+  test:
+    needs: lint
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: '3.10', python: '3.10', os: ubuntu-latest}
+          - {name: '3.9', python: '3.9', os: ubuntu-latest}
+          - {name: '3.8', python: '3.8', os: ubuntu-latest}
+          - {name: '3.7', python: '3.7', os: ubuntu-latest}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: update pip
+        run: pip install -U pip setuptools wheel
+      - name: install poetry
+        run: pip install poetry poetry-dynamic-versioning
+      - name: install libraries
+        run: poetry install
+      - name: run test
+        run: poetry run poe citest
+        #- name: upload codecov
+        #  uses: codecov/codecov-action@v2
+        #  with:
+        #    fail_ci_if_error: true
+        #    token: ${{ secrets.CODECOV_TOKEN }}
