@@ -1,0 +1,99 @@
+[tool.poetry]
+name = "opime-notify"
+version = "0.1.0"
+description = "Wotaku tools for opime"
+authors = ["KAWAI Shun <shun@osstech.co.jp>"]
+license = "MIT"
+packages = [
+  { include = "opime_notify", from = "src/" },
+]
+include = [
+  "src/opime_notify/py.typed"
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "^0.19.2"
+click = "^8.0.4"
+line-bot-sdk = "^2.1.0"
+rich = "^11.2.0"
+beautifulsoup4 = "^4.10.0"
+gspread = "^5.2.0"
+oauth2client = "^4.1.3"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+pyproject-flake8 = "^0.0.1-alpha.2"
+black = "^22.1.0"
+mypy = "^0.931"
+pre-commit = "^2.17.0"
+poethepoet = "^0.13.1"
+isort = "^5.10.1"
+pytest = "^7.0.1"
+pytest-cov = "^3.0.0"
+autoflake = "^1.4"
+types-requests = "^2.27.11"
+types-beautifulsoup4 = "^4.10.14"
+requests-mock = "^1.9.3"
+
+[tool.poetry.scripts]
+opime_notify = "opime_notify.main:cli"
+send_line = "opime_notify.cli.send_line:cli"
+fetch_schedule = "opime_notify.cli.fetch_schedule:cli"
+
+[tool.poe.tasks.test]
+cmd = "pytest --cov=src/ --cov-report=html tests/"
+
+[tool.poe.tasks.realtest]
+cmd = "pytest --cov=src/ --cov-report=html -m LINE tests/"
+
+[tool.poe.tasks.citest]
+cmd = "pytest --cov=src/ --cov-report=xml tests/"
+
+[tool.poe.tasks.lint]
+sequence = [
+  { cmd = "pflake8 src/ tests/" },
+  { cmd = "mypy src/" },
+]
+ignore_fail = "return_non_zero"
+
+[tool.poe.tasks.format]
+sequence = [
+  { cmd = "autoflake -ir --remove-all-unused-imports --remove-unused-variables --ignore-init-module-imports src/ tests/" },
+  { cmd = "isort src/ tests/" },
+  { cmd = "black src/ tests/" },
+  "lint"
+]
+
+[tool.flake8]
+max-line-length = 88
+max-complexity = 10
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = 3.9
+
+[[tool.mypy.overrides]]
+module = [
+  "linebot",
+  "linebot.models",
+  "linebot.exceptions",
+  "gspread",
+  "oauth2client.service_account"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = [
+  "-m", "not LINE",
+  "--strict-markers"
+]
+markers = [
+  "LINE: mark test as send LINE Message"
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
