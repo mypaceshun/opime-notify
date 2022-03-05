@@ -1,8 +1,7 @@
 name: Notify
 on:
-  push:
-    branches:
-      - 'develop'
+  schedule:
+    - cron: '*/30 * * * *'
 
 jobs:
   notify:
@@ -18,7 +17,7 @@ jobs:
       - name: install poetry
         run: pip install poetry poetry-dynamic-versioning
       - name: install libraries
-        run: poetry install
+        run: poetry install --no-dev
       - name: run notify
         run: |
           TMPFILE=`mktemp`
