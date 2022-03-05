@@ -5,7 +5,10 @@ description = "Wotaku tools for opime"
 authors = ["KAWAI Shun <shun@osstech.co.jp>"]
 license = "MIT"
 packages = [
-  { include = "opime_notify", from = "src/" }
+  { include = "opime_notify", from = "src/" },
+]
+include = [
+  "src/opime_notify/py.typed"
 ]
 
 [tool.poetry.dependencies]
@@ -14,7 +17,7 @@ python-dotenv = "^0.19.2"
 click = "^8.0.4"
 line-bot-sdk = "^2.1.0"
 rich = "^11.2.0"
-autoflake = "^1.4"
+beautifulsoup4 = "^4.10.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
@@ -26,6 +29,10 @@ poethepoet = "^0.13.1"
 isort = "^5.10.1"
 pytest = "^7.0.1"
 pytest-cov = "^3.0.0"
+autoflake = "^1.4"
+types-requests = "^2.27.11"
+types-beautifulsoup4 = "^4.10.14"
+requests-mock = "^1.9.3"
 
 [tool.poetry.scripts]
 send_line = "opime_notify.cli.send_line:cli"

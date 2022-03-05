@@ -39,3 +39,6 @@ repos:
   rev: v0.931
   hooks:
   - id: mypy
+    additional_dependencies:
+      - "types-requests==2.27.11"
+      - "types-beautifulsoup4==4.10.14"
