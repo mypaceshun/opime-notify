@@ -107,8 +107,10 @@ class Session:
                 schedule = self.fetch_schedule_detail(url)
                 if schedule is None:
                     continue
+                print(f"{schedule}")
                 parser = TheatreNewsParser(schedule)
                 theatre_schedule = parser.parse()
+                print(f"{theatre_schedule}")
                 theatre_schedule_list += theatre_schedule
         return theatre_schedule_list
 

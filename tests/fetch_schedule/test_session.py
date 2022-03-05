@@ -79,7 +79,7 @@ class TestFetchScheduleSession:
         with pytest.raises(HTTPError):
             s.fetch_schedule_detail(mock_url)
 
-    def test_fetch_schedule_theatre(self):
+    def test_fetch_schedule_theatre(self, monkeypatch):
         s = Session()
 
         def dummy_schedule_list(*args, **kwargs):
@@ -90,8 +90,20 @@ class TestFetchScheduleSession:
         def dummy_schedule_detail(*args, **kwargs):
             return Schedule(title="title", date=datetime(2021, 8, 23), type="test")
 
+        class DummyClass:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def parse(self, *args, **kwargs):
+                return [
+                    Schedule(title="title", date=datetime(2021, 8, 23), type="test")
+                ]
+
         s.fetch_schedule_list = dummy_schedule_list
         s.fetch_schedule_detail = dummy_schedule_detail
+        monkeypatch.setattr(
+            "opime_notify.fetch_schedule.ngt48_official.TheatreNewsParser", DummyClass
+        )
         slist = s.fetch_schedule_theatre(page=1)
         assert len(slist) == 1
         assert slist[0].title == "title"
