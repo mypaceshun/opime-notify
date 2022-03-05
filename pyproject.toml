@@ -18,6 +18,8 @@ click = "^8.0.4"
 line-bot-sdk = "^2.1.0"
 rich = "^11.2.0"
 beautifulsoup4 = "^4.10.0"
+gspread = "^5.2.0"
+oauth2client = "^4.1.3"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
@@ -35,6 +37,7 @@ types-beautifulsoup4 = "^4.10.14"
 requests-mock = "^1.9.3"
 
 [tool.poetry.scripts]
+opime_notify = "opime_notify.main:cli"
 send_line = "opime_notify.cli.send_line:cli"
 fetch_schedule = "opime_notify.cli.fetch_schedule:cli"
 
@@ -77,6 +80,8 @@ module = [
   "linebot",
   "linebot.models",
   "linebot.exceptions",
+  "gspread",
+  "oauth2client.service_account"
 ]
 ignore_missing_imports = true
 
