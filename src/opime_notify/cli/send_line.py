@@ -26,8 +26,8 @@ from rich.prompt import Prompt
     show_default=True,
 )
 @click.argument("text", type=str)
-def send_line(access_token: str, type: str, text: str) -> None:
-    print("[green]run script![/green]")
+def cli(access_token: str, type: str, text: str) -> None:
+    print("[bold green]run script send_line![/bold green]")
     if access_token is None:
         access_token = Prompt.ask("Enter channel access token")
 
