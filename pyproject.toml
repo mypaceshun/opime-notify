@@ -37,9 +37,9 @@ types-beautifulsoup4 = "^4.10.14"
 requests-mock = "^1.9.3"
 
 [tool.poetry.scripts]
-opime_notify = "opime_notify.main:cli"
-send_line = "opime_notify.cli.send_line:cli"
-fetch_schedule = "opime_notify.cli.fetch_schedule:cli"
+opime-notify = "opime_notify.main:cli"
+send-line = "opime_notify.cli.send_line:cli"
+fetch-schedule = "opime_notify.cli.fetch_schedule:cli"
 
 [tool.poe.tasks.test]
 cmd = "pytest --cov=src/ --cov-report=html tests/"

@@ -1,0 +1,32 @@
+name: Notify
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'
+
+jobs:
+  notify:
+    name: 'opime notify'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: update pip
+        run: pip install -U pip setuptools wheel
+      - name: install poetry
+        run: pip install poetry poetry-dynamic-versioning
+      - name: install libraries
+        run: poetry install --no-dev
+      - name: run notify
+        run: |
+          TMPFILE=`mktemp`
+          echo "${GOOGLE_JSON_KEY_DATA}" | base64 -d > ${TMPFILE}
+          echo "8ff48bc60da0a73e72990fc619d3f61b736d7ac00d526744e3f74a63aecdd51f ${TMPFILE}" > secret.sha256sum
+          sha256sum secret.sha256sum
+          poetry run opime-notify --google-json-key ${TMPFILE}
+        env:
+          GOOGLE_JSON_KEY_DATA: ${{ secrets.GOOGLE_JSON_KEY_DATA }}
+          LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }}
+          GSHEET_ID: ${{ secrets.GSHEET_ID }}
