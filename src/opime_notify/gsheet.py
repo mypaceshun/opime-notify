@@ -32,6 +32,8 @@ class GsheetSession:
         schedule_list = []
         require_keys = ["id", "title", "date", "status"]
         for key in require_keys:
+            if len(all_values) == 0:
+                return []
             if key not in all_values[0]:
                 return []
         for value_dict in all_values:
@@ -60,6 +62,7 @@ class GsheetSession:
         for key in header:
             if key == "id":
                 row_value.append("=ROW()-1")
+                continue
             value = schedule.get_value(key)
             if value is None:
                 value = ""
