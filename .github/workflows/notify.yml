@@ -21,6 +21,7 @@ jobs:
         run: poetry install --no-dev
       - name: run notify
         run: |
+          date
           TMPFILE=`mktemp`
           echo "${GOOGLE_JSON_KEY_DATA}" | base64 -d > ${TMPFILE}
           echo "8ff48bc60da0a73e72990fc619d3f61b736d7ac00d526744e3f74a63aecdd51f ${TMPFILE}" > secret.sha256sum
