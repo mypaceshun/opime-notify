@@ -59,8 +59,7 @@ class GsheetSession:
         row_value = []
         for key in header:
             if key == "id":
-                # id is dont change
-                continue
+                row_value.append("=ROW()-1")
             value = schedule.get_value(key)
             if value is None:
                 value = ""
@@ -68,7 +67,7 @@ class GsheetSession:
         end_col = len(header)
         end_col_str = self._int_to_alphabet(end_col)
         row = index + 2
-        range_str = f"B{row}:{end_col_str}{row}"
+        range_str = f"A{row}:{end_col_str}{row}"
         wsheet.update(range_str, [row_value], value_input_option="USER_ENTERED")
 
     def _int_to_alphabet(self, num: int) -> str:
@@ -84,5 +83,5 @@ class GsheetSession:
         header = self.fetch_headers(wsheet)
         end_col = len(header)
         end_col_str = self._int_to_alphabet(end_col)
-        range_str = f"B2:{end_col_str}30"
+        range_str = f"A2:{end_col_str}30"
         wsheet.batch_clear([range_str])
