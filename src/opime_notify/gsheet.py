@@ -51,7 +51,9 @@ class GsheetSession:
     def write_all_schedule(self, schedule_list: list[NotifySchedule]) -> None:
         wsheet = self.sheet.worksheet(self.sheet_name)
         header = self.fetch_headers(wsheet)
-        for index, schedule in enumerate(schedule_list):
+        nodup_schedule_list = list(set(schedule_list))
+        sorted_schedule_list = sorted(nodup_schedule_list)
+        for index, schedule in enumerate(sorted_schedule_list):
             self.write_schedule(wsheet, schedule, index, header)
 
     def write_schedule(
@@ -66,6 +68,8 @@ class GsheetSession:
             value = schedule.get_value(key)
             if value is None:
                 value = ""
+            if key == "status" and value == "":
+                value = "BEFORE"
             row_value.append(value)
         end_col = len(header)
         end_col_str = self._int_to_alphabet(end_col)
@@ -86,5 +90,5 @@ class GsheetSession:
         header = self.fetch_headers(wsheet)
         end_col = len(header)
         end_col_str = self._int_to_alphabet(end_col)
-        range_str = f"A2:{end_col_str}30"
+        range_str = f"A2:{end_col_str}100"
         wsheet.batch_clear([range_str])

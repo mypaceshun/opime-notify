@@ -3,6 +3,8 @@ from typing import Optional
 
 
 class NotifySchedule:
+    date_format = "%Y/%m/%d %H:%M:%S"
+
     def __init__(
         self,
         id: int,
@@ -13,7 +15,6 @@ class NotifySchedule:
         status: str = None,
         **kwargs,
     ):
-        self.date_format = "%Y/%m/%d %H:%M:%S"
         self.id = id
         self.title = title
         self.date = date
@@ -37,6 +38,17 @@ class NotifySchedule:
         ]
         args = ", ".join([repr(s) for s in arglist])
         return f"NotifySchedule({args})"
+
+    def __lt__(self, other):
+        return self.get_date() < other.get_date()
+
+    def __eq__(self, other):
+        if not isinstance(other, NotifySchedule):
+            return False
+        return self.title == other.title and self.get_date() == other.get_date()
+
+    def __hash__(self):
+        return hash(f"{self.title}{self.get_date()}")
 
     def get_date(self) -> datetime:
         return datetime.strptime(self.date, self.date_format)
