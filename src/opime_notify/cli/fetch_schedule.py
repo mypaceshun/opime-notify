@@ -28,6 +28,9 @@ def cli(gsheet_id, google_json_key):
     notify_schedule_list = []
     for theatre_schedule in theatre_schedule_list:
         notify_schedule_list += theatre_schedule.get_notify_schedule_list()
+    if len(notify_schedule_list) == 0:
+        print("notify_schedule_list is empty")
+        return
     print("notify_schedule_list")
     print(notify_schedule_list)
 

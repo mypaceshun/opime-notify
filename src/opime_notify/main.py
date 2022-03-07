@@ -29,6 +29,9 @@ def cli(line_access_token, gsheet_id, google_json_key):
     print("all_schedule")
     print(f"{all_schedule}")
     notify_schedule_list = filter_notify_schedule(all_schedule)
+    if len(notify_schedule_list) == 0:
+        print("notify_schedule_list is empty")
+        return
     print("notify_schedule_list")
     print(f"{notify_schedule_list}")
     line_notifiyer = LineNotifiyer(line_access_token)
