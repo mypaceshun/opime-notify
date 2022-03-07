@@ -1,12 +1,12 @@
-name: Notify
+name: Notify Daily
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/20 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   notify:
-    name: 'opime notify'
+    name: 'opime notify daily'
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
           echo "${GOOGLE_JSON_KEY_DATA}" | base64 -d > ${TMPFILE}
           echo "8ff48bc60da0a73e72990fc619d3f61b736d7ac00d526744e3f74a63aecdd51f ${TMPFILE}" > secret.sha256sum
           sha256sum secret.sha256sum
-          poetry run opime-notify --google-json-key ${TMPFILE}
+          poetry run fetch-schedule --google-json-key ${TMPFILE}
           rm ${TMPFILE}
         env:
           GOOGLE_JSON_KEY_DATA: ${{ secrets.GOOGLE_JSON_KEY_DATA }}
