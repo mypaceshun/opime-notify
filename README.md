@@ -30,6 +30,44 @@ Googleスプレッドシートにアクセスできるように Google Sheets AP
 
 * https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
 
+## スプレッドシートの準備
+
+スプレッドシートのヘッダー部(1行目)は自身で作成する必要があります。
+プログラム実行前に以下の内容を各行に記載しておいてください。
+
+```
+id | title | date | description | url | status
+```
+
+それぞれの行の説明は以下です。
+
+* id
+
+  通知ID。
+  現状利用していません。
+
+* title
+
+  通知のタイトルに利用される文字列です。
+
+* date
+
+  通知されるタイミングです。
+  YYYY/dd/mm HH:MM:SS の形式で記載してください。
+
+* description
+
+  通知の本文になります。
+
+* url
+
+  通知の末尾に付属するURLです。通知内容に関連したサイトのリンクを設定します。
+
+* status
+
+  基本的には空欄で問題ありません。
+  何かしらの原因で通知に失敗した際に、エラーメッセージが記録されます。
+
 # command
 
 ## opime-notiry
