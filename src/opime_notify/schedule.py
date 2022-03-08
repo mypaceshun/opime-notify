@@ -71,8 +71,8 @@ class NotifySchedule:
             return ""
 
     def normalize(self):
-        self.title = unicodedata.normalize(self.title)
-        self.description = unicodedata.normalize(self.description)
+        self.title = unicodedata.normalize("NFKC", self.title)
+        self.description = unicodedata.normalize("NFKC", self.description)
 
 
 def filter_notify_schedule(
