@@ -1,16 +1,12 @@
 import re
-import unicodedata
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Optional
 
-import requests
-from bs4 import BeautifulSoup
-from bs4.element import NavigableString, Tag
-
+from opime_notify.fetch_schedule import Parser, Schedule
 from opime_notify.schedule import NotifySchedule
 
 
-class TheatreSchedule:
+class TheatreSchedule(Schedule):
     def __init__(
         self,
         title: str,
@@ -28,22 +24,6 @@ class TheatreSchedule:
         self.offer_start_date = offer_start_date
         self.offer_end_date = offer_end_date
         self.result_date = result_date
-
-    def __str__(self):
-        date_str = self.get_date_str()
-        return f"{date_str} [{self.type}] {self.title}"
-
-    def __repr__(self):
-        self.get_date_str()
-        return (
-            f"TheatreSchedule({repr(self.title)}, {repr(self.date)}, {repr(self.type)})"
-        )
-
-    def get_date_str(self) -> str:
-        date_format = "%Y/%m/%d %H:%M:%S"
-        if self.date is None:
-            return ""
-        return self.date.strftime(date_format)
 
     def get_notify_schedule_list(self) -> list[NotifySchedule]:
         if self.date is None:
@@ -118,92 +98,13 @@ class TheatreSchedule:
         return notify_schedule_list
 
 
-class Session:
-    NEWS_URL = "https://ngt48.jp/news"
-
-    def _find_news_body(self, htmltext: str) -> Union[Tag, NavigableString, None]:
-        soup = BeautifulSoup(htmltext, "html.parser")
-        news_body_el = soup.find("div", "news-block-inner")
-        return news_body_el
-
-    def _split_tag_and_title(self, title_el: Tag) -> tuple[str, str]:
-        tag_el = title_el.span
-        tagname = ""
-        title = ""
-        if isinstance(tag_el, Tag):
-            tagname = tag_el.text.strip()
-            title_text = tag_el.next_sibling
-            if isinstance(title_text, NavigableString):
-                title = title_text.strip()
-        else:
-            title = title_el.text.strip()
-        return (tagname, title)
-
-    def _parse_datetime(self, date_el: Tag) -> Optional[datetime]:
-        _datestr = date_el.text.strip()
-        pattern = r"\d{4}\.\d{2}\.\d{2}"
-        mobj = re.match(pattern, _datestr)
-        if mobj is None:
-            return None
-        datestr = mobj.group(0)
-        datetime_pattern = "%Y.%m.%d"
-        return datetime.strptime(datestr, datetime_pattern)
-
-    def fetch_schedule_list(
-        self, page: int = 1, category: int = 0
-    ) -> list[Union[Tag, NavigableString, None]]:
-        url = f"{self.NEWS_URL}/articles/{page}/0/{category}"
-        res = requests.get(url)
-        res.raise_for_status()
-        news_body_el = self._find_news_body(res.text)
-        if not isinstance(news_body_el, Tag):
-            return []
-        news_list_el = news_body_el("a", href=re.compile(f"{self.NEWS_URL}/detail/*"))
-        return news_list_el
-
-    def fetch_schedule_detail(self, url: str) -> Optional[TheatreSchedule]:
-        res = requests.get(url)
-        res.raise_for_status()
-        news_body_el = self._find_news_body(res.text)
-        if not isinstance(news_body_el, Tag):
-            return None
-        title_el = news_body_el.find("div", "title")
-        if not isinstance(title_el, Tag):
-            return None
-        tagname, title = self._split_tag_and_title(title_el)
-        date_el = news_body_el.find("div", "date")
-        if not isinstance(date_el, Tag):
-            return None
-        date = self._parse_datetime(date_el)
-        body_el = news_body_el.find("div", "content")
-        body_text = ""
-        if isinstance(body_el, Tag):
-            body_text = body_el.text.strip()
-        return TheatreSchedule(
-            title=title, date=date, type=tagname, description=body_text
-        )
-
-    def fetch_schedule_theatre(
-        self,
-        page: int = 1,
-    ):
-        news_list_el = self.fetch_schedule_list(page=page, category=1)
-        theatre_schedule_list = []
-        for news_el in news_list_el:
-            if not isinstance(news_el, Tag):
-                continue
-            url = news_el.attrs.get("href", None)
-            if isinstance(url, str):
-                schedule = self.fetch_schedule_detail(url)
-                if schedule is None:
-                    continue
-                parser = TheatreNewsParser(schedule)
-                theatre_schedule = parser.parse()
-                theatre_schedule_list += theatre_schedule
-        return theatre_schedule_list
+def schedule_to_theatre_schedule(schedule: Schedule) -> TheatreSchedule:
+    return TheatreSchedule(
+        schedule.title, schedule.date, schedule.type, schedule.description
+    )
 
 
-class TheatreNewsParser:
+class TheatreNewsParser(Parser):
     def __init__(self, schedule: TheatreSchedule):
         self.schedule = schedule
         self.schedule.title = self._text_normalize(schedule.title)
@@ -212,11 +113,6 @@ class TheatreNewsParser:
         self.offer_start: Optional[datetime] = None
         self.offer_end: Optional[datetime] = None
         self.result_date: Optional[datetime] = None
-
-    def _text_normalize(self, text: str) -> str:
-        _text = unicodedata.normalize("NFKC", text)
-        _text = _text.replace(" ", "")
-        return _text
 
     def _get_news_type(self) -> str:
         type = "special"
@@ -265,9 +161,6 @@ class TheatreNewsParser:
             result_date_str = self._trim_week_str(mresult.group(1))
             self.result_date = datetime.strptime(result_date_str, "%m月%d日%H:%M")
             self.result_date = self.result_date.replace(year=now_year)
-
-    def _trim_week_str(self, text: str) -> str:
-        return re.sub(r"\(.\)", "", text)
 
     def parse_body_onedate(self, onedate_text: str) -> list[TheatreSchedule]:
         closed_keyword = "休館日"
