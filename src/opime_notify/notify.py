@@ -25,6 +25,7 @@ class LineNotifiyer:
 
     def notify_line(self, schedule: NotifySchedule) -> NotifySchedule:
         line_bot_api = LineBotApi(self.access_token)
+        schedule.normalize()
         message = self.generate_message(schedule)
         result_schedule = schedule
         try:
@@ -44,16 +45,24 @@ class LineNotifiyer:
     def generate_message_text(self, schedule: NotifySchedule):
         title = schedule.title
         description = schedule.description
-        if description == "":
-            return TextSendMessage(text=title)
-        message = f"""{title}
-
-{description}"""
+        url = schedule.url
+        message = title
+        if description != "":
+            message = f"{title}\n\n{description}"
+        if url is not None:
+            if url.startswith("http://") or url.startswith("https://"):
+                message += f"\n\n{url}"
+        max_len = 5000
+        if len(message) > max_len:
+            message = message[:max_len]
         return TextSendMessage(text=message)
 
-    def generate_message_url(sel, schedule: NotifySchedule):
+    def generate_message_url(self, schedule: NotifySchedule):
+        message = schedule.description
+        max_len = 160
+        if len(message) > max_len:
+            return self.generate_message_text(schedule)
         template = ButtonsTemplate(
-            title=schedule.title,
             text=schedule.description,
             actions=[URIAction(label="確認する", uri=schedule.url)],
         )

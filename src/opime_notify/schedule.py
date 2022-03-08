@@ -1,3 +1,4 @@
+import unicodedata
 from datetime import datetime
 from typing import Optional
 
@@ -10,7 +11,7 @@ class NotifySchedule:
         id: int,
         title: str,
         date: str,
-        description: str = None,
+        description: str = "",
         url: str = None,
         status: str = None,
         **kwargs,
@@ -68,6 +69,10 @@ class NotifySchedule:
             return self.status
         else:
             return ""
+
+    def normalize(self):
+        self.title = unicodedata.normalize(self.title)
+        self.description = unicodedata.normalize(self.description)
 
 
 def filter_notify_schedule(
