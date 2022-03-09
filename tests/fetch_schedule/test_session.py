@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from requests.exceptions import HTTPError
 
-from opime_notify.fetch_schedule import Session, TheatreSchedule
+from opime_notify.fetch_schedule import Schedule
+from opime_notify.fetch_schedule.session import Session
+from opime_notify.fetch_schedule.theatre_parser import TheatreSchedule
 
 
 class TestFetchScheduleSession:
@@ -70,7 +72,7 @@ class TestFetchScheduleSession:
         requests_mock.get(mock_url, text=test_text)
         s = Session()
         schedule = s.fetch_schedule_detail(mock_url)
-        assert isinstance(schedule, TheatreSchedule)
+        assert isinstance(schedule, Schedule)
 
     def test_fetch_schedule_detail_error(self, requests_mock):
         mock_url = "https://www.example.com/"
@@ -106,7 +108,7 @@ class TestFetchScheduleSession:
         s.fetch_schedule_list = dummy_schedule_list
         s.fetch_schedule_detail = dummy_schedule_detail
         monkeypatch.setattr(
-            "opime_notify.fetch_schedule.ngt48_official.TheatreNewsParser", DummyClass
+            "opime_notify.fetch_schedule.session.TheatreNewsParser", DummyClass
         )
         slist = s.fetch_schedule_theatre(page=1)
         assert len(slist) == 1
