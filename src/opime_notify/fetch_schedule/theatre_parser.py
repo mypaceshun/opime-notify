@@ -32,21 +32,22 @@ class TheatreSchedule(Schedule):
         dmm_url = "https://www.dmm.com/lod/ngt48/"
         url = "https://ticket.akb48-group.com/home/top.php?mode=&gr=NGT48"
         notify_schedule_list = []
-        notify_message = f"""本日は {self.title} です！
+        date_str = self.date.strftime("%m月%d日 %H時%M分")
+        notify_message = f"""{date_str} から {self.title} が開演します！
 
 劇場の方は劇場で、そうでない方もDMMを見て応援しましょう！"""
-        notify_time = self.date.replace(hour=9, minute=0)
-        notify_schedule_list.append(
-            NotifySchedule(
-                id=0,
-                title=self.title,
-                date=notify_time.strftime(date_format),
-                description=notify_message,
-                url=dmm_url,
-                status="BEFORE",
+        notify_time = self.date - timedelta(hours=2)
+        if self.date is not None and datetime.now() < notify_time:
+            notify_schedule_list.append(
+                NotifySchedule(
+                    id=0,
+                    title=self.title,
+                    date=notify_time.strftime(date_format),
+                    description=notify_message,
+                    url=dmm_url,
+                    status="BEFORE",
+                )
             )
-        )
-        date_str = self.date.strftime("%m月%d日 %H時%M分")
         if self.offer_start_date is not None and datetime.now() < self.offer_start_date:
             offer_start_str = self.offer_start_date.strftime("%H時%M分")
             notify_message = f"""{date_str} に開催される {self.title} の申込みが {offer_start_str} より開始します！
