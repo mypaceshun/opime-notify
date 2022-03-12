@@ -10,6 +10,7 @@ from bs4.element import NavigableString, Tag
 from opime_notify.fetch_schedule import Schedule
 from opime_notify.fetch_schedule.monthly_photo_parser import (
     MonthlyPhotoParser,
+    MonthlyPhotoSchedule,
     schedule_to_monthly_photo_schedule,
 )
 from opime_notify.fetch_schedule.otsale_parser import (
@@ -142,10 +143,12 @@ class OfficialSession:
 class ShopSession:
     NEWS_URL = "https://shop.ngt48.jp/news/"
 
-    def fetch_schedule_monthly_photo(self):
+    def fetch_schedule_monthly_photo(self) -> list[MonthlyPhotoSchedule]:
         news_list_el = self.fetch_schedule_list()
         monthly_photo_schedule_list = []
         for news_el in news_list_el:
+            if not isinstance(news_el, Tag):
+                continue
             title = self._parse_title(news_el)
             if not self.is_monthly_photo_title(title):
                 continue

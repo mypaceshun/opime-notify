@@ -1,4 +1,5 @@
 import click
+from dotenv import load_dotenv
 from linebot import LineBotApi
 from linebot.exceptions import LineBotApiError
 from linebot.models import (
@@ -11,12 +12,14 @@ from linebot.models import (
 from rich import print
 from rich.prompt import Prompt
 
+load_dotenv()
+
 
 @click.command()
 @click.option(
     "--access-token",
     help="channel access token for LINE Messaging API",
-    envvar="CHANNEL_ACCESS_TOKEN",
+    envvar="LINE_ACCESS_TOKEN",
 )
 @click.option(
     "--type",

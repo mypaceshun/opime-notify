@@ -38,6 +38,7 @@ requests-mock = "^1.9.3"
 
 [tool.poetry.scripts]
 opime-notify = "opime_notify.main:cli"
+opime-notify-realtime = "opime_notify.main:realtime"
 send-line = "opime_notify.cli.send_line:cli"
 fetch-schedule = "opime_notify.cli.fetch_schedule:cli"
 
@@ -81,6 +82,8 @@ module = [
   "linebot.models",
   "linebot.exceptions",
   "gspread",
+  "gspread.utils",
+  "gspread.exceptions",
   "oauth2client.service_account"
 ]
 ignore_missing_imports = true
