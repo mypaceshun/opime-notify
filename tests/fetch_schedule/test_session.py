@@ -6,14 +6,14 @@ from bs4.element import Tag
 from requests.exceptions import HTTPError
 
 from opime_notify.fetch_schedule import Schedule
-from opime_notify.fetch_schedule.session import Session
+from opime_notify.fetch_schedule.session import OfficialSession
 from opime_notify.fetch_schedule.theatre_parser import TheatreSchedule
 
 
 class TestFetchScheduleSession:
     def test_find_news_body(self):
         test_text = '<div class="news-block-inner">text</div>'
-        s = Session()
+        s = OfficialSession()
         res = s._find_news_body(test_text)
         assert isinstance(res, Tag)
         assert res.text == "text"
@@ -29,7 +29,7 @@ class TestFetchScheduleSession:
     )
     def test_split_tag_and_title(self, title_text, expect_tagname, expect_title):
         soup = BeautifulSoup(title_text, "html.parser")
-        s = Session()
+        s = OfficialSession()
         tagname, title = s._split_tag_and_title(soup.p)
         assert tagname == expect_tagname
         assert title == expect_title
@@ -44,11 +44,11 @@ class TestFetchScheduleSession:
     )
     def test_parse_datetime(self, date_text, expect_value):
         soup = BeautifulSoup(date_text, "html.parser")
-        s = Session()
+        s = OfficialSession()
         assert s._parse_datetime(soup.p) == expect_value
 
     def test_fetch_schedule_list(self, requests_mock):
-        s = Session()
+        s = OfficialSession()
         test_text = f'<div class="news-block-inner"><a href="{s.NEWS_URL}/detail/test"></a></div>'  # noqa: E501
         mock_url = f"{s.NEWS_URL}/articles/1/0/0"
         requests_mock.get(mock_url, text=test_text)
@@ -57,7 +57,7 @@ class TestFetchScheduleSession:
         assert isinstance(news_list[0], Tag)
 
     def test_fetch_schedule_list_error(self, requests_mock):
-        s = Session()
+        s = OfficialSession()
         mock_url = f"{s.NEWS_URL}/articles/1/0/0"
         requests_mock.get(mock_url, status_code=400)
         with pytest.raises(HTTPError):
@@ -70,19 +70,19 @@ class TestFetchScheduleSession:
         <div class="content">content</div>"""
         test_text = f'<div class="news-block-inner">{test_body}</div>'
         requests_mock.get(mock_url, text=test_text)
-        s = Session()
+        s = OfficialSession()
         schedule = s.fetch_schedule_detail(mock_url)
         assert isinstance(schedule, Schedule)
 
     def test_fetch_schedule_detail_error(self, requests_mock):
         mock_url = "https://www.example.com/"
         requests_mock.get(mock_url, status_code=400)
-        s = Session()
+        s = OfficialSession()
         with pytest.raises(HTTPError):
             s.fetch_schedule_detail(mock_url)
 
     def test_fetch_schedule_theatre(self, monkeypatch):
-        s = Session()
+        s = OfficialSession()
 
         def dummy_schedule_list(*args, **kwargs):
             test_text = f'<a href="{s.NEWS_URL}/detail/test"></a>'
