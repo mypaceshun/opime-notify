@@ -27,6 +27,7 @@ jobs:
           echo "8ff48bc60da0a73e72990fc619d3f61b736d7ac00d526744e3f74a63aecdd51f ${TMPFILE}" > secret.sha256sum
           sha256sum secret.sha256sum
           poetry run opime-notify --google-json-key ${TMPFILE}
+          poetry run opime-notify-realtime --google-json-key ${TMPFILE}
           rm ${TMPFILE}
         env:
           GOOGLE_JSON_KEY_DATA: ${{ secrets.GOOGLE_JSON_KEY_DATA }}
