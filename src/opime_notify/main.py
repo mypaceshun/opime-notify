@@ -6,6 +6,7 @@ from rich import print
 
 from opime_notify.gsheet import GsheetSession
 from opime_notify.notify import LineNotifiyer
+from opime_notify.realtime.mpadapter import MPAdapter
 from opime_notify.schedule import filter_notify_schedule, marge_result_schedule
 
 load_dotenv()
@@ -41,3 +42,37 @@ def cli(line_access_token, gsheet_id, google_json_key):
     print(f"{new_schedule_list}")
     gsession.clear_schedule()
     gsession.write_all_schedule(new_schedule_list)
+
+
+@click.command()
+@click.option(
+    "--line-access-token", help="line access token", envvar="LINE_ACCESS_TOKEN"
+)
+@click.option("--gsheet-id", help="cache spread sheet id", envvar="GSHEET_ID")
+@click.option(
+    "--google-json-key",
+    help="google json key file",
+    type=click.Path(),
+    envvar="GOOGLE_JSON_KEY_FILE",
+)
+def realtime(line_access_token, gsheet_id, google_json_key):
+    json_key_file = Path(google_json_key).expanduser()
+    gsession = GsheetSession(json_key_file, gsheet_id)
+
+    all_adapter = []
+    all_adapter.append(MPAdapter())
+
+    notify_article_list = []
+    for adapter in all_adapter:
+        curr_article_list = adapter.fetch_curr_article(gsession)
+        print("curr_article_list")
+        print(f"{curr_article_list}")
+        _notify_article_list = adapter.fetch_notify_article_list(curr_article_list)
+        if len(_notify_article_list) == 0:
+            print("notify_article is empty")
+            continue
+        print("notify_article_list")
+        print(f"{_notify_article_list}")
+        adapter.regist_article(_notify_article_list + curr_article_list, gsession)
+        notify_article_list += _notify_article_list
+    print(notify_article_list)
