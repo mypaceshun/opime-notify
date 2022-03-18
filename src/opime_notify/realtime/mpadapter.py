@@ -69,11 +69,15 @@ class MPAdapter(BaseAdapter):
     def fetch_notify_article_list(
         self, curr_article_list: list[BaseArticle] = None
     ) -> list[BaseArticle]:
+        category_keyword = "新商品"
         session = ShopSession()
         news_el_list = session.fetch_schedule_list()
         article_list: list[BaseArticle] = []
         for news_el in news_el_list:
             if not isinstance(news_el, Tag):
+                continue
+            category = session._parse_category(news_el)
+            if category != category_keyword:
                 continue
             date = session._parse_datetime(news_el)
             title = session._parse_title(news_el)
@@ -105,14 +109,11 @@ class MPAdapter(BaseAdapter):
             title = article.title
             if date is None or title == "":
                 continue
-            print(f"{start_date=} {date=}")
             if start_date < date:
                 notify_article_list.append(article)
             elif start_date == date:
                 article.calc_title_hash()
                 title_hash = article.title_hash
-                print(f"{title_hash=} {title_hash_list=}")
-                print(f"{title_hash not in title_hash_list=}")
                 if title_hash not in title_hash_list:
                     notify_article_list.append(article)
         return notify_article_list

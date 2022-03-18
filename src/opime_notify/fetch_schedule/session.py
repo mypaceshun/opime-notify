@@ -220,6 +220,12 @@ class ShopSession:
         date_str = mobj.group(1)
         return datetime.strptime(date_str, date_format)
 
+    def _parse_category(self, news_el: Tag) -> str:
+        category_el = news_el.find("div", "category")
+        if not isinstance(category_el, Tag):
+            return ""
+        return category_el.text.strip()
+
     def _parse_title(self, news_el: Tag) -> str:
         title_el = news_el.find("div", "title-post")
         if not isinstance(title_el, Tag):
