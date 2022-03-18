@@ -52,7 +52,7 @@ class TheatreSchedule(Schedule):
             offer_start_str = self.offer_start_date.strftime("%H時%M分")
             notify_message = f"""{date_str} に開催される {self.title} の申込みが {offer_start_str} より開始します！
 
-忘れなように申込みしましょう！"""
+忘れないように申込みをしましょう！"""
             notify_time = self.offer_start_date - timedelta(minutes=30)
             notify_schedule_list.append(
                 NotifySchedule(
