@@ -45,6 +45,9 @@ fetch-schedule = "opime_notify.cli.fetch_schedule:cli"
 [tool.poe.tasks.test]
 cmd = "pytest --cov=src/ --cov-report=html tests/"
 
+[tool.poe.tasks.parttest]
+cmd = "pytest --cov=src/ --cov-report=html"
+
 [tool.poe.tasks.realtest]
 cmd = "pytest --cov=src/ --cov-report=html -m LINE tests/"
 
