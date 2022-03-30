@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from opime_notify.gsheet import GsheetSession
+from opime_notify.schedule import NotifySchedule
 
 
 class BaseArticle(ABC):
@@ -16,6 +17,10 @@ class BaseArticle(ABC):
 
     def __repr__(self):
         return f"{self.type}()"
+
+    @abstractmethod
+    def get_notify_list(self) -> list[NotifySchedule]:
+        return []
 
 
 class BaseAdapter(ABC):

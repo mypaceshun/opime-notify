@@ -45,6 +45,22 @@ class MPArticle(BaseArticle):
         else:
             return ""
 
+    def get_notify_list(self) -> list[NotifySchedule]:
+        title = f"【新着ショップ情報】{self.title}"
+        description = f"""ショップNEWSの新着情報が更新されました！
+[{self.title}]"""
+        url = "https://shop.ngt48.jp/#news"
+        date_str = datetime.now().strftime(NotifySchedule.date_format)
+        notify = NotifySchedule(
+            id=0,
+            title=title,
+            date=date_str,
+            description=description,
+            url=url,
+            status="REALTIME",
+        )
+        return [notify]
+
 
 class MPAdapter(BaseAdapter):
     def __init__(self):

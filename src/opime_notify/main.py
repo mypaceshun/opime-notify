@@ -76,3 +76,10 @@ def realtime(line_access_token, gsheet_id, google_json_key):
         adapter.regist_article(_notify_article_list + curr_article_list, gsession)
         notify_article_list += _notify_article_list
     print(notify_article_list)
+    notify_list = []
+    for notify_article in notify_article_list:
+        notify_list += notify_article.get_notify_list()
+    line_notifiyer = LineNotifiyer(line_access_token)
+    result_list = line_notifiyer.notify_line_all(notify_list)
+    print("result_list")
+    print(f"{result_list}")
