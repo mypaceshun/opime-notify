@@ -69,12 +69,15 @@ def realtime(line_access_token, gsheet_id, google_json_key):
         print(f"{curr_article_list}")
         _notify_article_list = adapter.fetch_notify_article_list(curr_article_list)
         if len(_notify_article_list) == 0:
-            print("notify_article is empty")
             continue
         print("notify_article_list")
         print(f"{_notify_article_list}")
         adapter.regist_article(_notify_article_list + curr_article_list, gsession)
         notify_article_list += _notify_article_list
+    if len(notify_article_list):
+        print("notify_article is empty")
+        return
+    print("notify_article_list")
     print(notify_article_list)
     notify_list = []
     for notify_article in notify_article_list:
