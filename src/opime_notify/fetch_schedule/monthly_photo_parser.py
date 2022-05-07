@@ -67,7 +67,7 @@ class MonthlyPhotoParser(Parser):
         ]
 
     def parse_start_date(self, body_text: str) -> Optional[datetime]:
-        date_pattern = r"(\d+月\d+日\(.\)\d+:\d+)より、下記商品の販売を開始いたします。"
+        date_pattern = r"(\d+月\d+日\(.\)\d+:\d+)より、下記商品の販売を開始いたします"
         mobj = re.search(date_pattern, body_text)
         if mobj is None:
             return None
