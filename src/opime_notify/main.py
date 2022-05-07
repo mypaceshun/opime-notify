@@ -55,7 +55,13 @@ def cli(line_access_token, gsheet_id, google_json_key):
     type=click.Path(),
     envvar="GOOGLE_JSON_KEY_FILE",
 )
-def realtime(line_access_token, gsheet_id, google_json_key):
+@click.option(
+    "--dry-run",
+    help="no regist google spread sheet and no notify",
+    is_flag=True,
+    default=False,
+)
+def realtime(line_access_token, gsheet_id, google_json_key, dry_run):
     json_key_file = Path(google_json_key).expanduser()
     gsession = GsheetSession(json_key_file, gsheet_id)
 
@@ -72,9 +78,10 @@ def realtime(line_access_token, gsheet_id, google_json_key):
             continue
         print("notify_article_list")
         print(f"{_notify_article_list}")
-        adapter.regist_article(_notify_article_list + curr_article_list, gsession)
+        if dry_run is False:
+            adapter.regist_article(_notify_article_list + curr_article_list, gsession)
         notify_article_list += _notify_article_list
-    if len(notify_article_list):
+    if len(notify_article_list) == 0:
         print("notify_article is empty")
         return
     print("notify_article_list")
@@ -82,6 +89,8 @@ def realtime(line_access_token, gsheet_id, google_json_key):
     notify_list = []
     for notify_article in notify_article_list:
         notify_list += notify_article.get_notify_list()
+    if dry_run is True:
+        return
     line_notifiyer = LineNotifiyer(line_access_token)
     result_list = line_notifiyer.notify_line_all(notify_list)
     print("result_list")
