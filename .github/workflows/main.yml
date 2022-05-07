@@ -52,7 +52,7 @@ jobs:
       - name: install libraries
         run: poetry install
       - name: run test
-        run: poetry run poe citest
+        run: poetry run poe test
       - name: upload codecov
         uses: codecov/codecov-action@v2
         with:

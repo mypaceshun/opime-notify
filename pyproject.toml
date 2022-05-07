@@ -43,16 +43,14 @@ send-line = "opime_notify.cli.send_line:cli"
 fetch-schedule = "opime_notify.cli.fetch_schedule:cli"
 
 [tool.poe.tasks.test]
-cmd = "pytest --cov=src/ --cov-report=html tests/"
-
-[tool.poe.tasks.parttest]
-cmd = "pytest --cov=src/ --cov-report=html"
+cmd = "pytest --cov=src/ --cov-report=html --cov-report=term --cov-report=xml $target"
+args = [
+  { name="target", default="tests/", options=["-t", "--target"], help="target directory"}
+]
+help = "run test"
 
 [tool.poe.tasks.realtest]
 cmd = "pytest --cov=src/ --cov-report=html -m LINE tests/"
-
-[tool.poe.tasks.citest]
-cmd = "pytest --cov=src/ --cov-report=xml tests/"
 
 [tool.poe.tasks.lint]
 sequence = [
@@ -60,6 +58,7 @@ sequence = [
   { cmd = "mypy src/" },
 ]
 ignore_fail = "return_non_zero"
+help = "run lint"
 
 [tool.poe.tasks.format]
 sequence = [
@@ -68,6 +67,7 @@ sequence = [
   { cmd = "black src/ tests/" },
   "lint"
 ]
+help = "run formatter"
 
 [tool.flake8]
 max-line-length = 88
