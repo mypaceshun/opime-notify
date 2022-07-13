@@ -147,7 +147,7 @@ class TheatreNewsParser(Parser):
         under_keyword = "\n\n"
         text = text.split(under_keyword)[0]
         offer_pattern = r"(\d{4}年\d+月\d+日\(.\)\d{2}:\d{2})~(\d+月\d+日\(.\)\d{2}:\d{2})まで"
-        result_pattern = r"当落発表:(\d+月\d+日\(.\)\d{2}:\d{2})まで"
+        result_pattern = r"当落発表[は:](\d+月\d+日\(.\)\d{2}:\d{2})まで"
         now_year = datetime.now().year
         moffer = re.search(offer_pattern, text)
         if moffer:
@@ -189,7 +189,7 @@ class TheatreNewsParser(Parser):
             schedule_list.append(schedule)
         return schedule_list
 
-    def parse_section_onedate(
+    def parse_section_onedate(  # noqa: C901
         self, section_text: str, onedate: datetime
     ) -> Optional[TheatreSchedule]:
         section_lines = section_text.split("\n")
@@ -201,7 +201,14 @@ class TheatreNewsParser(Parser):
         DAY = "昼公演"
         NIGHT = "夜公演"
         for line in section_lines:
-            if DAY in line or NIGHT in line:
+            new_date_pattern = r"\d+月\d+日\(.\)(\d+:\d+)"
+            new_date_format = "%H:%M"
+            new_date_match = re.search(new_date_pattern, line)
+            if new_date_match:
+                date_str = new_date_match.group(1)
+                open_date = datetime.strptime(date_str, new_date_format)
+                date = date.replace(hour=open_date.hour, minute=open_date.minute)
+            elif DAY in line or NIGHT in line:
                 if DAY in line:
                     suffix = DAY
                 elif NIGHT in line:
