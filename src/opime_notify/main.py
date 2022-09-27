@@ -6,7 +6,6 @@ from rich import print
 
 from opime_notify.gsheet import GsheetSession
 from opime_notify.notify import LineNotifiyer
-from opime_notify.realtime.mpadapter import MPAdapter
 from opime_notify.schedule import filter_notify_schedule, marge_result_schedule
 
 load_dotenv()
@@ -66,7 +65,7 @@ def realtime(line_access_token, gsheet_id, google_json_key, dry_run):
     gsession = GsheetSession(json_key_file, gsheet_id)
 
     all_adapter = []
-    all_adapter.append(MPAdapter())
+    # all_adapter.append(MPAdapter())
 
     notify_article_list = []
     for adapter in all_adapter:

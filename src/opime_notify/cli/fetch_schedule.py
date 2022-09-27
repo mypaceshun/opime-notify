@@ -33,8 +33,8 @@ def cli(gsheet_id, google_json_key, no_regist):
     notify_schedule_list = []
     notify_schedule_list += _fetch_theatre_schedule_list(osession)
     notify_schedule_list += _fetch_otsale_schedule_list(osession)
-    ssession = ShopSession()
-    notify_schedule_list += _fetch_mpschedule_list(ssession)
+    # ssession = ShopSession()
+    # notify_schedule_list += _fetch_mpschedule_list(ssession)
 
     if len(notify_schedule_list) == 0:
         print("notify_schedule_list is empty")
