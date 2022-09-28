@@ -4,9 +4,8 @@ from pathlib import Path
 import click
 from rich import print
 
-from opime_notify.fetch_schedule.monthly_photo_parser import filter_mpschedule_list
 from opime_notify.fetch_schedule.otsale_parser import filter_otsale_schedule_list
-from opime_notify.fetch_schedule.session import OfficialSession, ShopSession
+from opime_notify.fetch_schedule.session import OfficialSession
 from opime_notify.fetch_schedule.theatre_parser import filter_theatre_schedule_list
 from opime_notify.gsheet import GsheetSession
 from opime_notify.schedule import NotifySchedule
@@ -33,8 +32,6 @@ def cli(gsheet_id, google_json_key, no_regist):
     notify_schedule_list = []
     notify_schedule_list += _fetch_theatre_schedule_list(osession)
     notify_schedule_list += _fetch_otsale_schedule_list(osession)
-    # ssession = ShopSession()
-    # notify_schedule_list += _fetch_mpschedule_list(ssession)
 
     if len(notify_schedule_list) == 0:
         print("notify_schedule_list is empty")
@@ -76,17 +73,4 @@ def _fetch_otsale_schedule_list(session: OfficialSession) -> list[NotifySchedule
     notify_schedule_list = []
     for otsale_schedule in otsale_schedule_list:
         notify_schedule_list += otsale_schedule.get_notify_schedule_list()
-    return notify_schedule_list
-
-
-def _fetch_mpschedule_list(session: ShopSession) -> list[NotifySchedule]:
-    monthly_photo_schedule_list = session.fetch_schedule_monthly_photo()
-    monthly_photo_schedule_list = filter_mpschedule_list(
-        monthly_photo_schedule_list, start_date=datetime.now()
-    )
-    print("monthly_photo_schedule_list")
-    print(monthly_photo_schedule_list)
-    notify_schedule_list = []
-    for mpschedule in monthly_photo_schedule_list:
-        notify_schedule_list += mpschedule.get_notify_schedule_list()
     return notify_schedule_list

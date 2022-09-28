@@ -62,7 +62,7 @@ help = "run lint"
 
 [tool.poe.tasks.format]
 sequence = [
-  { cmd = "autoflake -ir --remove-all-unused-imports --remove-unused-variables --ignore-init-module-imports src/ tests/" },
+  { cmd = "autoflake -ir --remove-all-unused-imports --ignore-init-module-imports src/ tests/" },
   { cmd = "isort src/ tests/" },
   { cmd = "black src/ tests/" },
   "lint"

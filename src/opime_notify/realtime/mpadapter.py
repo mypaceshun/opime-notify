@@ -1,10 +1,8 @@
-import unicodedata
+import re
 from datetime import datetime
 from typing import Optional
 
-from bs4.element import Tag
-
-from opime_notify.fetch_schedule.session import ShopSession
+from opime_notify.fetch_schedule.session import ShopSession, TagDict
 from opime_notify.gsheet import GsheetSession
 from opime_notify.realtime import BaseAdapter, BaseArticle
 from opime_notify.schedule import NotifySchedule
@@ -12,26 +10,27 @@ from opime_notify.schedule import NotifySchedule
 
 class MPArticle(BaseArticle):
     def __init__(
-        self, title: str = "", date: Optional[datetime] = None, title_hash: str = ""
+        self,
+        title: str = "",
+        date: Optional[datetime] = None,
+        code: str = "",
+        id: int = -1,
+        name: str = "",
+        name_kana: str = "",
     ):
         self.type = "MPArticle"
         self.title = title
         self.date = date
-        if title_hash is None:
-            self.calc_title_hash()
-        else:
-            self.title_hash = title_hash
+        self.code = code
+        self.id = id
+        self.name = name
+        self.name_kana = name_kana
 
     def __str__(self):
         return f"{self.type=} {self.title=}, {self.date=}"
 
     def __repr__(self):
         return f"{self.type}({repr(self.title)}, {repr(self.date)})"
-
-    def calc_title_hash(self):
-        norm_title = unicodedata.normalize("NFKC", self.title)
-        norm_title = norm_title.replace(" ", "")
-        self.title_hash = hash(norm_title)
 
     def get(self, key) -> str:
         if key == "title":
@@ -40,8 +39,14 @@ class MPArticle(BaseArticle):
             if self.date is None:
                 return ""
             return self.date.strftime(NotifySchedule.date_format)
-        elif key == "title_hash":
-            return self.title_hash
+        elif key == "id":
+            return str(self.id)
+        elif key == "code":
+            return self.code
+        elif key == "name":
+            return self.name
+        elif key == "name_kana":
+            return self.name_kana
         else:
             return ""
 
@@ -65,7 +70,7 @@ class MPArticle(BaseArticle):
 class MPAdapter(BaseAdapter):
     def __init__(self):
         self.type = "MPAdapter"
-        self.sheet_name = "monthly_photo_curr_article_list"
+        self.sheet_name = "monthly_photo_curr_tag_list"
         super()
 
     def fetch_curr_article(self, gsession: GsheetSession) -> list[BaseArticle]:
@@ -78,26 +83,44 @@ class MPAdapter(BaseAdapter):
                 continue
             title = curr_record["title"]
             date_str = curr_record["date"]
+            id = int(curr_record["id"])
+            code = curr_record["code"]
+            name = curr_record["name"]
+            name_kana = curr_record["name_kana"]
             date = datetime.strptime(date_str, NotifySchedule.date_format)
-            curr_article_list.append(MPArticle(title=title, date=date))
+            curr_article_list.append(
+                MPArticle(
+                    title=title,
+                    date=date,
+                    code=code,
+                    id=id,
+                    name=name,
+                    name_kana=name_kana,
+                )
+            )
         return curr_article_list
 
     def fetch_notify_article_list(
         self, curr_article_list: list[BaseArticle] = None
     ) -> list[BaseArticle]:
-        category_keyword = "新商品"
+        # mpadapterで取得するのは記事ではないが、互換性のために記事のように保存する
         session = ShopSession()
-        news_el_list = session.fetch_schedule_list()
+        tag_list = session.fetch_tag_list()
+        tag_list = self.filter_mptags(tag_list)
+        date = datetime.now()
         article_list: list[BaseArticle] = []
-        for news_el in news_el_list:
-            if not isinstance(news_el, Tag):
-                continue
-            category = session._parse_category(news_el)
-            if category != category_keyword:
-                continue
-            date = session._parse_datetime(news_el)
-            title = session._parse_title(news_el)
-            article_list.append(MPArticle(title=title, date=date))
+        for tag in tag_list:
+            title = session.generate_title(tag["code"], tag["name"])
+            article_list.append(
+                MPArticle(
+                    title=title,
+                    date=date,
+                    code=tag["code"],
+                    id=tag["id"],
+                    name=tag["name"],
+                    name_kana=tag["name_kana"],
+                )
+            )
         if curr_article_list is None:
             return article_list
         notify_article_list: list[BaseArticle] = self.filter_notify_article_list(
@@ -108,31 +131,44 @@ class MPAdapter(BaseAdapter):
     def filter_notify_article_list(
         self, curr_article_list: list[BaseArticle], article_list: list[BaseArticle]
     ) -> list[BaseArticle]:
-        start_date = self.max_date_article(curr_article_list)
-        if start_date is None:
+        # idは加算され続けていいくことが前提
+        max_id = self.get_max_id(curr_article_list)
+        if len(curr_article_list) < 1:
             return article_list
-        title_hash_list = []
+        code_list: list[str] = []
         for curr_article in curr_article_list:
             if not isinstance(curr_article, MPArticle):
                 continue
-            curr_article.calc_title_hash()
-            title_hash_list.append(curr_article.title_hash)
+            code_list.append(curr_article.code)
         notify_article_list: list[BaseArticle] = []
         for article in article_list:
             if not isinstance(article, MPArticle):
                 continue
             date = article.date
             title = article.title
+            id = article.id
             if date is None or title == "":
                 continue
-            if start_date < date:
+            if max_id < id:
                 notify_article_list.append(article)
-            elif start_date == date:
-                article.calc_title_hash()
-                title_hash = article.title_hash
-                if title_hash not in title_hash_list:
-                    notify_article_list.append(article)
         return notify_article_list
+
+    def get_max_id(self, article_list: list[BaseArticle]) -> int:
+        _article_list = [a for a in article_list if isinstance(a, MPArticle)]
+        if len(_article_list) == 0:
+            return 0
+        return max([a.id for a in _article_list])
+
+    def filter_max_date_article(
+        self, article_list: list[BaseArticle]
+    ) -> list[BaseArticle]:
+        max_id = self.get_max_id(article_list)
+        max_id_article_list: list[BaseArticle] = []
+        for article in article_list:
+            if isinstance(article, MPArticle):
+                if article.id == max_id:
+                    max_id_article_list.append(article)
+        return max_id_article_list
 
     def regist_article(
         self, article_list: list[BaseArticle], gsession: GsheetSession
@@ -144,12 +180,18 @@ class MPAdapter(BaseAdapter):
         for article in _article_list:
             if not isinstance(article, MPArticle):
                 continue
-            article.calc_title_hash()
             row = []
             for key in headers:
-                if key == "id":
-                    row.append("=ROW()-1")
-                else:
-                    row.append(article.get(key))
+                row.append(article.get(key))
             table.append(row)
         gsession.write_table(table, self.sheet_name)
+
+    def filter_mptags(self, tags: list[TagDict]) -> list[TagDict]:
+        mppattern = r"\d{4}年\d{1,2}月度個別生写真"
+        mpp = re.compile(mppattern)
+        mptaglist: list[TagDict] = []
+        for tag in tags:
+            m = mpp.match(tag["name"])
+            if m:
+                mptaglist.append(tag)
+        return mptaglist

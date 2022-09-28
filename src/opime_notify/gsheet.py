@@ -55,6 +55,18 @@ class GsheetSession:
         all_values = wsheet.get_all_records()
         return all_values
 
+    def fetch_curr_tag(self, sheet_name: str) -> list[dict]:
+        """
+        for ShopSession
+        """
+        headers = ["id", "title", "date", "code", "name", "name_kana"]
+        try:
+            wsheet = self.sheet.worksheet(sheet_name)
+        except WorksheetNotFound:
+            wsheet = self.init_wsheet(sheet_name, headers)
+        all_values = wsheet.get_all_records()
+        return all_values
+
     def init_wsheet(
         self, sheet_name: str, headers: list[str], rows: int = 100, cols: int = 20
     ):

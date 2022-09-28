@@ -1,18 +1,13 @@
 import re
 import unicodedata
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, TypedDict, Union
 
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
 
 from opime_notify.fetch_schedule import Schedule
-from opime_notify.fetch_schedule.monthly_photo_parser import (
-    MonthlyPhotoParser,
-    MonthlyPhotoSchedule,
-    schedule_to_monthly_photo_schedule,
-)
 from opime_notify.fetch_schedule.otsale_parser import (
     OTSaleNewsParser,
     OTSaleSchedule,
@@ -140,113 +135,27 @@ class OfficialSession:
         return otsale_schedule_list
 
 
+class TagDict(TypedDict):
+    id: int
+    code: str
+    name: str
+    name_kana: str
+
+
 class ShopSession:
-    NEWS_URL = "https://shop.ngt48.jp/news/"
+    BASE_URL = "https://official-goods-store.jp/ngt48/"
+    TAGLIST_URL = f"{BASE_URL}api/tag/lists.json?shop_id=279"
 
-    def fetch_schedule_monthly_photo(self) -> list[MonthlyPhotoSchedule]:
-        news_list_el = self.fetch_schedule_list()
-        monthly_photo_schedule_list = []
-        for news_el in news_list_el:
-            if not isinstance(news_el, Tag):
-                continue
-            title = self._parse_title(news_el)
-            if not self.is_monthly_photo_title(title):
-                continue
-            url = self._parse_url(news_el)
-            if url == "":
-                continue
-            schedule = self.fetch_schedule_detail(url)
-            if schedule is None:
-                continue
-            _schedule = schedule_to_monthly_photo_schedule(schedule)
-            _schedule.url = url
-            parser = MonthlyPhotoParser(_schedule)
-            mpschedule = parser.parse()
-            monthly_photo_schedule_list += mpschedule
-
-        return monthly_photo_schedule_list
-
-    def fetch_schedule_list(
-        self, page: int = 1
-    ) -> list[Union[Tag, NavigableString, None]]:
-        url = self.NEWS_URL
-        if page >= 2:
-            url += f"page/{page}/"
+    def fetch_tag_list(self) -> list[TagDict]:
+        """
+        news記事のようなものが無くなってしまったのでタグ一覧で新商品を推測する
+        """
+        url = self.TAGLIST_URL
         res = requests.get(url)
         res.raise_for_status()
-        news_body_el = self._find_news_body(res.text)
-        if news_body_el is None:
-            return []
-        news_list_el = news_body_el("div", "news-item")
-        return news_list_el
+        resdict = res.json()
+        taglist: list[TagDict] = resdict.get("tags", [])
+        return taglist
 
-    def fetch_schedule_detail(self, url: str) -> Optional[Schedule]:
-        res = requests.get(url)
-        res.raise_for_status()
-        title_el = self._find_news_title(res.text)
-        body_el = self._find_news_body(res.text)
-        if title_el is None or body_el is None:
-            return None
-        title_str = self._parse_title(title_el)
-        date = self._parse_datetime(title_el)
-        if date is None:
-            return None
-        description = body_el.text.strip()
-        return Schedule(title_str, date, "monthly_photo", description)
-
-    def _find_news_title(self, htmltext: str) -> Optional[Tag]:
-        soup = BeautifulSoup(htmltext, "html.parser")
-        news_title_el = soup.find("div", "news-item")
-        if isinstance(news_title_el, Tag):
-            return news_title_el
-        return None
-
-    def _find_news_body(self, htmltext: str) -> Optional[Tag]:
-        soup = BeautifulSoup(htmltext, "html.parser")
-        news_body_el = soup.find("div", "entry-content")
-        if isinstance(news_body_el, Tag):
-            return news_body_el
-        return None
-
-    def _parse_datetime(self, news_el: Tag) -> Optional[datetime]:
-        date_el = news_el.find("div", "block-1")
-        if not isinstance(date_el, Tag):
-            return None
-        date_pattern = r"(\d{4}\.\d{2}\.\d{2})"
-        date_format = "%Y.%m.%d"
-        mobj = re.search(date_pattern, date_el.text)
-        if mobj is None:
-            return None
-        date_str = mobj.group(1)
-        return datetime.strptime(date_str, date_format)
-
-    def _parse_category(self, news_el: Tag) -> str:
-        category_el = news_el.find("div", "category")
-        if not isinstance(category_el, Tag):
-            return ""
-        return category_el.text.strip()
-
-    def _parse_title(self, news_el: Tag) -> str:
-        title_el = news_el.find("div", "title-post")
-        if not isinstance(title_el, Tag):
-            return ""
-        return title_el.text.strip()
-
-    def _parse_url(self, news_el: Tag) -> str:
-        title_el = news_el.find("div", "title-post")
-        if not isinstance(title_el, Tag):
-            return ""
-        url_el = title_el.find("a")
-        if not isinstance(url_el, Tag):
-            return ""
-        return url_el.attrs.get("href", "").strip()
-
-    def is_monthly_photo_title(self, title: str) -> bool:
-        result = False
-        norm_title = unicodedata.normalize("NFKC", title)
-        norm_title = norm_title.replace(" ", "")
-        monthly_photo_pattern = r"\d{4}年\d+月度個別生写真\d枚セットVol.\d"
-        mobj = re.search(monthly_photo_pattern, norm_title)
-        if mobj is None:
-            return result
-        return True
+    def generate_title(self, code: str, name: str) -> str:
+        return f"[{code}]{name}"
