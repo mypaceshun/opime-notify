@@ -51,10 +51,10 @@ class MPArticle(BaseArticle):
             return ""
 
     def get_notify_list(self) -> list[NotifySchedule]:
-        title = f"【新着ショップ情報】{self.title}"
-        description = f"""ショップNEWSの新着情報が更新されました！
-[{self.title}]"""
-        url = "https://shop.ngt48.jp/#news"
+        title = f"【新着ショップ情報】{self.name}"
+        description = f"""NGT48オフィシャルショップにて月別生写真が新発売されている可能性があります。
+[{self.name}]"""
+        url = "https://official-goods-store.jp/ngt48/product/list?tag_codes=NGT-T-003%252C{self.code}"  # noqa: E501
         date_str = datetime.now().strftime(NotifySchedule.date_format)
         notify = NotifySchedule(
             id=0,
