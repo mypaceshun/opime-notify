@@ -54,7 +54,7 @@ class MPArticle(BaseArticle):
         title = f"【新着ショップ情報】{self.name}"
         description = f"""NGT48オフィシャルショップにて月別生写真が新発売されている可能性があります。
 [{self.name}]"""
-        url = "https://official-goods-store.jp/ngt48/product/list?tag_codes=NGT-T-003%252C{self.code}"  # noqa: E501
+        url = f"https://official-goods-store.jp/ngt48/product/list?tag_codes=NGT-T-003%252C{self.code}"  # noqa: E501
         date_str = datetime.now().strftime(NotifySchedule.date_format)
         notify = NotifySchedule(
             id=0,
