@@ -113,36 +113,3 @@ class TestOfficialSession:
         assert slist[0].title == "title"
         assert slist[0].date == datetime(2021, 8, 23)
         assert slist[0].type == "test"
-
-    def test_fetch_schedule_otsale(self, monkeypatch):
-        s = OfficialSession()
-
-        def dummy_schedule_list(*args, **kwargs):
-            test_text = f"""<a href="{s.NEWS_URL}/detail/test">
-<div class="title"><span class="badge">Badge</span>
-シングル 劇場盤＜第1次〜第99次申込＞受付開始のお知らせ</div></a>"""
-            soup = BeautifulSoup(test_text, "html.parser")
-            return soup("a")
-
-        def dummy_schedule_detail(*args, **kwargs):
-            return Schedule(title="title", date=datetime(2021, 8, 23), type="test")
-
-        class DummyClass:
-            def __init__(self, *args, **kwargs):
-                pass
-
-            def parse(self, *args, **kwargs):
-                return [
-                    Schedule(title="title", date=datetime(2021, 8, 23), type="test")
-                ]
-
-        s.fetch_schedule_list = dummy_schedule_list
-        s.fetch_schedule_detail = dummy_schedule_detail
-        monkeypatch.setattr(
-            "opime_notify.fetch_schedule.session.OTSaleNewsParser", DummyClass
-        )
-        slist = s.fetch_schedule_otsale()
-        assert len(slist) == 1
-        assert slist[0].title == "title"
-        assert slist[0].date == datetime(2021, 8, 23)
-        assert slist[0].type == "test"

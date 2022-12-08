@@ -1,5 +1,4 @@
 import re
-import unicodedata
 from datetime import datetime
 from typing import Optional, TypedDict, Union
 
@@ -8,11 +7,6 @@ from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
 
 from opime_notify.fetch_schedule import Schedule
-from opime_notify.fetch_schedule.otsale_parser import (
-    OTSaleNewsParser,
-    OTSaleSchedule,
-    schedule_to_otsale_schedule,
-)
 from opime_notify.fetch_schedule.theatre_parser import (
     TheatreNewsParser,
     TheatreSchedule,
@@ -103,37 +97,6 @@ class OfficialSession:
                 theatre_schedule_list += theatre_schedule
         return theatre_schedule_list
 
-    def fetch_schedule_otsale(self, page: int = 1) -> list[OTSaleSchedule]:
-        """
-        otsale -> online talk sale
-        """
-        info_el_list = self.fetch_schedule_list(page=page, category=11)
-        otsale_info_pattern = r"シングル劇場盤<第\d+次〜第\d+次申込>受付開始のお知らせ"
-        otsale_schedule_list = []
-        for info_el in info_el_list:
-            if not isinstance(info_el, Tag):
-                continue
-            title_el = info_el.find("div", "title")
-            if not isinstance(title_el, Tag):
-                continue
-            _, title = self._split_tag_and_title(title_el)
-            _title = unicodedata.normalize("NFKC", title)
-            _title = _title.replace(" ", "")
-            mobj = re.search(otsale_info_pattern, _title)
-            if mobj is None:
-                continue
-            url = info_el.attrs.get("href", None)
-            if isinstance(url, str):
-                schedule = self.fetch_schedule_detail(url)
-                if schedule is None:
-                    continue
-                _schedule = schedule_to_otsale_schedule(schedule)
-                parser = OTSaleNewsParser(_schedule)
-                otsale_schedule = parser.parse()
-                otsale_schedule_list += otsale_schedule
-
-        return otsale_schedule_list
-
 
 class TagDict(TypedDict):
     id: int
@@ -159,3 +122,19 @@ class ShopSession:
 
     def generate_title(self, code: str, name: str) -> str:
         return f"[{code}]{name}"
+
+
+class CDShopSession:
+    BASE_URL = "https://ngt48cd.shop/"
+    NEWS_URL = f"{BASE_URL}api/v1/news?group_id=5"
+
+    def fetch_article_list(self) -> list:
+        url = self.NEWS_URL
+        res = requests.get(url)
+        res.raise_for_status()
+        resdict = res.json()
+        if isinstance(resdict, list):
+            return resdict
+        print("fetch error")
+        print(resdict)
+        return []

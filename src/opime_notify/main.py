@@ -6,6 +6,7 @@ from rich import print
 
 from opime_notify.gsheet import GsheetSession
 from opime_notify.notify import LineNotifiyer
+from opime_notify.realtime.cdshop_adapter import CDShopAdapter
 from opime_notify.realtime.mpadapter import MPAdapter
 from opime_notify.schedule import filter_notify_schedule, marge_result_schedule
 
@@ -67,17 +68,18 @@ def realtime(line_access_token, gsheet_id, google_json_key, dry_run):
 
     all_adapter = []
     all_adapter.append(MPAdapter())
+    all_adapter.append(CDShopAdapter())
 
     notify_article_list = []
     for adapter in all_adapter:
         curr_article_list = adapter.fetch_curr_article(gsession)
         print("curr_article_list")
-        print(f"{curr_article_list}")
+        print(curr_article_list)
         _notify_article_list = adapter.fetch_notify_article_list(curr_article_list)
         if len(_notify_article_list) == 0:
             continue
         print("notify_article_list")
-        print(f"{_notify_article_list}")
+        print(_notify_article_list)
         if dry_run is False:
             adapter.regist_article(_notify_article_list + curr_article_list, gsession)
         notify_article_list += _notify_article_list
@@ -94,4 +96,4 @@ def realtime(line_access_token, gsheet_id, google_json_key, dry_run):
     line_notifiyer = LineNotifiyer(line_access_token)
     result_list = line_notifiyer.notify_line_all(notify_list)
     print("result_list")
-    print(f"{result_list}")
+    print(result_list)
