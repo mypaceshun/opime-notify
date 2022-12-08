@@ -4,7 +4,6 @@ from pathlib import Path
 import click
 from rich import print
 
-from opime_notify.fetch_schedule.otsale_parser import filter_otsale_schedule_list
 from opime_notify.fetch_schedule.session import OfficialSession
 from opime_notify.fetch_schedule.theatre_parser import filter_theatre_schedule_list
 from opime_notify.gsheet import GsheetSession
@@ -31,7 +30,6 @@ def cli(gsheet_id, google_json_key, no_regist):
     osession = OfficialSession()
     notify_schedule_list = []
     notify_schedule_list += _fetch_theatre_schedule_list(osession)
-    notify_schedule_list += _fetch_otsale_schedule_list(osession)
 
     if len(notify_schedule_list) == 0:
         print("notify_schedule_list is empty")
@@ -60,17 +58,4 @@ def _fetch_theatre_schedule_list(session: OfficialSession) -> list[NotifySchedul
     notify_schedule_list = []
     for theatre_schedule in theatre_schedule_list:
         notify_schedule_list += theatre_schedule.get_notify_schedule_list()
-    return notify_schedule_list
-
-
-def _fetch_otsale_schedule_list(session: OfficialSession) -> list[NotifySchedule]:
-    otsale_schedule_list = session.fetch_schedule_otsale()
-    otsale_schedule_list = filter_otsale_schedule_list(
-        otsale_schedule_list, start_date=datetime.now()
-    )
-    print("otsale_schedule_list")
-    print(otsale_schedule_list)
-    notify_schedule_list = []
-    for otsale_schedule in otsale_schedule_list:
-        notify_schedule_list += otsale_schedule.get_notify_schedule_list()
     return notify_schedule_list
