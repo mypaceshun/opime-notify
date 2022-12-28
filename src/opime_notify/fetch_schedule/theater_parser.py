@@ -99,7 +99,7 @@ class TheatreSchedule(Schedule):
         return notify_schedule_list
 
 
-def schedule_to_theatre_schedule(schedule: Schedule) -> TheatreSchedule:
+def schedule_to_theater_schedule(schedule: Schedule) -> TheatreSchedule:
     return TheatreSchedule(
         schedule.title, schedule.date, schedule.type, schedule.description
     )
@@ -241,22 +241,22 @@ class TheatreNewsParser(Parser):
         )
 
 
-def filter_theatre_schedule_list(
-    theatre_schedule_list: list[TheatreSchedule],
+def filter_theater_schedule_list(
+    theater_schedule_list: list[TheatreSchedule],
     keywords: Optional[list[str]] = None,
     start_date: Optional[datetime] = None,
 ) -> list[TheatreSchedule]:
     if keywords is None:
         keywords = []
-    _theatre_schedule_list = []
-    for theatre_schedule in theatre_schedule_list:
-        if start_date is not None and theatre_schedule.date is not None:
-            if theatre_schedule.date < start_date:
+    _theater_schedule_list = []
+    for theater_schedule in theater_schedule_list:
+        if start_date is not None and theater_schedule.date is not None:
+            if theater_schedule.date < start_date:
                 continue
         for keyword in keywords:
             if (
-                keyword in theatre_schedule.description
-                or keyword in theatre_schedule.title
+                keyword in theater_schedule.description
+                or keyword in theater_schedule.title
             ):
-                _theatre_schedule_list.append(theatre_schedule)
-    return _theatre_schedule_list
+                _theater_schedule_list.append(theater_schedule)
+    return _theater_schedule_list

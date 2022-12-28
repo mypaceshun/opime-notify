@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 
 from opime_notify.fetch_schedule import Schedule
 from opime_notify.fetch_schedule.session import OfficialSession
-from opime_notify.fetch_schedule.theatre_parser import TheatreSchedule
+from opime_notify.fetch_schedule.theater_parser import TheatreSchedule
 
 
 class TestOfficialSession:
@@ -81,7 +81,7 @@ class TestOfficialSession:
         with pytest.raises(HTTPError):
             s.fetch_schedule_detail(mock_url)
 
-    def test_fetch_schedule_theatre(self, monkeypatch):
+    def test_fetch_schedule_theater(self, monkeypatch):
         s = OfficialSession()
 
         def dummy_schedule_list(*args, **kwargs):
@@ -108,7 +108,7 @@ class TestOfficialSession:
         monkeypatch.setattr(
             "opime_notify.fetch_schedule.session.TheatreNewsParser", DummyClass
         )
-        slist = s.fetch_schedule_theatre(page=1)
+        slist = s.fetch_schedule_theater(page=1)
         assert len(slist) == 1
         assert slist[0].title == "title"
         assert slist[0].date == datetime(2021, 8, 23)

@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
 
 from opime_notify.fetch_schedule import Schedule
-from opime_notify.fetch_schedule.theatre_parser import (
+from opime_notify.fetch_schedule.theater_parser import (
     TheatreNewsParser,
     TheatreSchedule,
-    schedule_to_theatre_schedule,
+    schedule_to_theater_schedule,
 )
 
 
@@ -77,12 +77,12 @@ class OfficialSession:
             body_text = body_el.text.strip()
         return Schedule(title=title, date=date, type=tagname, description=body_text)
 
-    def fetch_schedule_theatre(
+    def fetch_schedule_theater(
         self,
         page: int = 1,
     ) -> list[TheatreSchedule]:
         news_list_el = self.fetch_schedule_list(page=page, category=1)
-        theatre_schedule_list = []
+        theater_schedule_list = []
         for news_el in news_list_el:
             if not isinstance(news_el, Tag):
                 continue
@@ -91,11 +91,11 @@ class OfficialSession:
                 schedule = self.fetch_schedule_detail(url)
                 if schedule is None:
                     continue
-                _schedule = schedule_to_theatre_schedule(schedule)
+                _schedule = schedule_to_theater_schedule(schedule)
                 parser = TheatreNewsParser(_schedule)
-                theatre_schedule = parser.parse()
-                theatre_schedule_list += theatre_schedule
-        return theatre_schedule_list
+                theater_schedule = parser.parse()
+                theater_schedule_list += theater_schedule
+        return theater_schedule_list
 
 
 class TagDict(TypedDict):

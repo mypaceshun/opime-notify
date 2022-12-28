@@ -5,7 +5,7 @@ import click
 from rich import print
 
 from opime_notify.fetch_schedule.session import OfficialSession
-from opime_notify.fetch_schedule.theatre_parser import filter_theatre_schedule_list
+from opime_notify.fetch_schedule.theater_parser import filter_theater_schedule_list
 from opime_notify.gsheet import GsheetSession
 from opime_notify.schedule import NotifySchedule
 
@@ -29,7 +29,7 @@ def cli(gsheet_id, google_json_key, no_regist):
     print("[bold green]run script fetch_schedule[/bold green]")
     osession = OfficialSession()
     notify_schedule_list = []
-    notify_schedule_list += _fetch_theatre_schedule_list(osession)
+    notify_schedule_list += _fetch_theater_schedule_list(osession)
 
     if len(notify_schedule_list) == 0:
         print("notify_schedule_list is empty")
@@ -48,14 +48,14 @@ def cli(gsheet_id, google_json_key, no_regist):
         gsession.write_all_schedule(all_schedule)
 
 
-def _fetch_theatre_schedule_list(session: OfficialSession) -> list[NotifySchedule]:
-    theatre_schedule_list = session.fetch_schedule_theatre()
-    theatre_schedule_list = filter_theatre_schedule_list(
-        theatre_schedule_list, keywords=["中井りか"], start_date=datetime.now()
+def _fetch_theater_schedule_list(session: OfficialSession) -> list[NotifySchedule]:
+    theater_schedule_list = session.fetch_schedule_theater()
+    theater_schedule_list = filter_theater_schedule_list(
+        theater_schedule_list, keywords=["中井りか"], start_date=datetime.now()
     )
-    print("theatre_schedule_list")
-    print(theatre_schedule_list)
+    print("theater_schedule_list")
+    print(theater_schedule_list)
     notify_schedule_list = []
-    for theatre_schedule in theatre_schedule_list:
-        notify_schedule_list += theatre_schedule.get_notify_schedule_list()
+    for theater_schedule in theater_schedule_list:
+        notify_schedule_list += theater_schedule.get_notify_schedule_list()
     return notify_schedule_list
