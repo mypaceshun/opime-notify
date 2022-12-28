@@ -8,8 +8,8 @@ from bs4.element import NavigableString, Tag
 
 from opime_notify.fetch_schedule import Schedule
 from opime_notify.fetch_schedule.theater_parser import (
-    TheatreNewsParser,
-    TheatreSchedule,
+    TheaterNewsParser,
+    TheaterSchedule,
     schedule_to_theater_schedule,
 )
 
@@ -80,7 +80,7 @@ class OfficialSession:
     def fetch_schedule_theater(
         self,
         page: int = 1,
-    ) -> list[TheatreSchedule]:
+    ) -> list[TheaterSchedule]:
         news_list_el = self.fetch_schedule_list(page=page, category=1)
         theater_schedule_list = []
         for news_el in news_list_el:
@@ -92,7 +92,7 @@ class OfficialSession:
                 if schedule is None:
                     continue
                 _schedule = schedule_to_theater_schedule(schedule)
-                parser = TheatreNewsParser(_schedule)
+                parser = TheaterNewsParser(_schedule)
                 theater_schedule = parser.parse()
                 theater_schedule_list += theater_schedule
         return theater_schedule_list

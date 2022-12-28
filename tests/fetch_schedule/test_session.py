@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 
 from opime_notify.fetch_schedule import Schedule
 from opime_notify.fetch_schedule.session import OfficialSession
-from opime_notify.fetch_schedule.theater_parser import TheatreSchedule
+from opime_notify.fetch_schedule.theater_parser import TheaterSchedule
 
 
 class TestOfficialSession:
@@ -90,7 +90,7 @@ class TestOfficialSession:
             return soup("a")
 
         def dummy_schedule_detail(*args, **kwargs):
-            return TheatreSchedule(
+            return TheaterSchedule(
                 title="title", date=datetime(2021, 8, 23), type="test"
             )
 
@@ -106,7 +106,7 @@ class TestOfficialSession:
         s.fetch_schedule_list = dummy_schedule_list
         s.fetch_schedule_detail = dummy_schedule_detail
         monkeypatch.setattr(
-            "opime_notify.fetch_schedule.session.TheatreNewsParser", DummyClass
+            "opime_notify.fetch_schedule.session.TheaterNewsParser", DummyClass
         )
         slist = s.fetch_schedule_theater(page=1)
         assert len(slist) == 1

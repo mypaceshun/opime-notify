@@ -6,7 +6,7 @@ from opime_notify.fetch_schedule import Parser, Schedule
 from opime_notify.schedule import NotifySchedule
 
 
-class TheatreSchedule(Schedule):
+class TheaterSchedule(Schedule):
     def __init__(
         self,
         title: str,
@@ -99,14 +99,14 @@ class TheatreSchedule(Schedule):
         return notify_schedule_list
 
 
-def schedule_to_theater_schedule(schedule: Schedule) -> TheatreSchedule:
-    return TheatreSchedule(
+def schedule_to_theater_schedule(schedule: Schedule) -> TheaterSchedule:
+    return TheaterSchedule(
         schedule.title, schedule.date, schedule.type, schedule.description
     )
 
 
-class TheatreNewsParser(Parser):
-    def __init__(self, schedule: TheatreSchedule):
+class TheaterNewsParser(Parser):
+    def __init__(self, schedule: TheaterSchedule):
         self.schedule = schedule
         self.schedule.title = self._text_normalize(schedule.title)
         self.schedule.description = self._text_normalize(schedule.description)
@@ -117,18 +117,24 @@ class TheatreNewsParser(Parser):
 
     def _get_news_type(self) -> str:
         type = "special"
-        pattern = r"^\d{4}年\d+月\d+日\(.\)~\d+月\d+日\(.\)NGT48劇場公演スケジュールのご案内"
+        pattern = r"^(\d{4})年\d+月\d+日\(.\)~\d+月\d+日\(.\)NGT48劇場公演スケジュールのご案内"
         mobj = re.match(pattern, self.schedule.title)
         if mobj:
+            try:
+                year = int(mobj[1])
+                if self.schedule.date is not None:
+                    self.schedule.date = self.schedule.date.replace(year=year)
+            except ValueError as error:
+                print(f"WARNING {error=}")
             type = "normal"
         return type
 
-    def parse(self) -> list[TheatreSchedule]:
+    def parse(self) -> list[TheaterSchedule]:
         if self.news_type == "normal":
             return self.parse_normal()
         return []
 
-    def parse_normal(self) -> list[TheatreSchedule]:
+    def parse_normal(self) -> list[TheaterSchedule]:
         body_str = self.schedule.description
         self.parse_offer_date(body_str)
         under_keyword = "【チケット申込について】"
@@ -163,7 +169,7 @@ class TheatreNewsParser(Parser):
             self.result_date = datetime.strptime(result_date_str, "%m月%d日%H:%M")
             self.result_date = self.result_date.replace(year=now_year)
 
-    def parse_body_onedate(self, onedate_text: str) -> list[TheatreSchedule]:
+    def parse_body_onedate(self, onedate_text: str) -> list[TheaterSchedule]:
         closed_keyword = "休館日"
         if closed_keyword in onedate_text:
             return []
@@ -191,7 +197,7 @@ class TheatreNewsParser(Parser):
 
     def parse_section_onedate(  # noqa: C901
         self, section_text: str, onedate: datetime
-    ) -> Optional[TheatreSchedule]:
+    ) -> Optional[TheaterSchedule]:
         section_lines = section_text.split("\n")
         title = ""
         date = onedate
@@ -230,7 +236,7 @@ class TheatreNewsParser(Parser):
             return None
         if suffix != "":
             title = f"{title}【{suffix}】"
-        return TheatreSchedule(
+        return TheaterSchedule(
             title=title,
             date=date,
             type=type,
@@ -242,10 +248,10 @@ class TheatreNewsParser(Parser):
 
 
 def filter_theater_schedule_list(
-    theater_schedule_list: list[TheatreSchedule],
+    theater_schedule_list: list[TheaterSchedule],
     keywords: Optional[list[str]] = None,
     start_date: Optional[datetime] = None,
-) -> list[TheatreSchedule]:
+) -> list[TheaterSchedule]:
     if keywords is None:
         keywords = []
     _theater_schedule_list = []
