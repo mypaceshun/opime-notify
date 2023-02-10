@@ -46,7 +46,7 @@ class OfficialSession:
         return datetime.strptime(datestr, datetime_pattern)
 
     def fetch_schedule_list(
-        self, page: int = 1, category: int = 0
+        self, page: int = 1, category: int = 0, verbose: bool = False
     ) -> list[Union[Tag, NavigableString, None]]:
         url = f"{self.NEWS_URL}/articles/{page}/0/{category}"
         res = requests.get(url)
@@ -57,7 +57,9 @@ class OfficialSession:
         news_list_el = news_body_el("a", href=re.compile(f"{self.NEWS_URL}/detail/*"))
         return news_list_el
 
-    def fetch_schedule_detail(self, url: str) -> Optional[Schedule]:
+    def fetch_schedule_detail(
+        self, url: str, verbose: bool = False
+    ) -> Optional[Schedule]:
         res = requests.get(url)
         res.raise_for_status()
         news_body_el = self._find_news_body(res.text)
@@ -75,25 +77,28 @@ class OfficialSession:
         body_text = ""
         if isinstance(body_el, Tag):
             body_text = body_el.text.strip()
+        if verbose:
+            print(f"{title=}, {date=}, {tagname=}")
         return Schedule(title=title, date=date, type=tagname, description=body_text)
 
     def fetch_schedule_theater(
         self,
         page: int = 1,
+        verbose: bool = False,
     ) -> list[TheaterSchedule]:
-        news_list_el = self.fetch_schedule_list(page=page, category=1)
+        news_list_el = self.fetch_schedule_list(page=page, category=1, verbose=verbose)
         theater_schedule_list = []
         for news_el in news_list_el:
             if not isinstance(news_el, Tag):
                 continue
             url = news_el.attrs.get("href", None)
             if isinstance(url, str):
-                schedule = self.fetch_schedule_detail(url)
+                schedule = self.fetch_schedule_detail(url, verbose=verbose)
                 if schedule is None:
                     continue
                 _schedule = schedule_to_theater_schedule(schedule)
                 parser = TheaterNewsParser(_schedule)
-                theater_schedule = parser.parse()
+                theater_schedule = parser.parse(verbose=verbose)
                 theater_schedule_list += theater_schedule
         return theater_schedule_list
 

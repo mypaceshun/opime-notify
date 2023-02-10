@@ -117,19 +117,26 @@ class TheaterNewsParser(Parser):
 
     def _get_news_type(self) -> str:
         type = "special"
-        pattern = r"^(\d{4})年\d+月\d+日\(.\)~\d+月\d+日\(.\)NGT48劇場公演スケジュールのご案内"
-        mobj = re.match(pattern, self.schedule.title)
-        if mobj:
-            try:
-                year = int(mobj[1])
-                if self.schedule.date is not None:
-                    self.schedule.date = self.schedule.date.replace(year=year)
-            except ValueError as error:
-                print(f"WARNING {error=}")
-            type = "normal"
+        patterns = [
+            r"^(\d{4})年\d+月\d+日\(.\)~\d+月\d+日\(.\)NGT48劇場公演スケジュールのご案内",
+            r"^(\d{4})年\d+月\d+日\(.\)~\d+日\(.\)NGT48劇場公演スケジュールのご案内",
+        ]
+        for pattern in patterns:
+            mobj = re.match(pattern, self.schedule.title)
+            if mobj:
+                try:
+                    year = int(mobj[1])
+                    if self.schedule.date is not None:
+                        self.schedule.date = self.schedule.date.replace(year=year)
+                except ValueError as error:
+                    print(f"WARNING {error=}")
+                type = "normal"
+                break
         return type
 
-    def parse(self) -> list[TheaterSchedule]:
+    def parse(self, verbose: bool = False) -> list[TheaterSchedule]:
+        if verbose:
+            print(f"{self.news_type=}")
         if self.news_type == "normal":
             return self.parse_normal()
         return []

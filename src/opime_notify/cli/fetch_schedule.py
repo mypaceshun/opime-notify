@@ -25,11 +25,12 @@ from opime_notify.schedule import NotifySchedule
     is_flag=True,
     default=False,
 )
-def cli(gsheet_id, google_json_key, no_regist):
+@click.option("--verbose", "-v", help="verbose output", is_flag=True, default=False)
+def cli(gsheet_id, google_json_key, no_regist, verbose):
     print("[bold green]run script fetch_schedule[/bold green]")
     osession = OfficialSession()
     notify_schedule_list = []
-    notify_schedule_list += _fetch_theater_schedule_list(osession)
+    notify_schedule_list += _fetch_theater_schedule_list(osession, verbose=verbose)
 
     if len(notify_schedule_list) == 0:
         print("notify_schedule_list is empty")
@@ -48,8 +49,13 @@ def cli(gsheet_id, google_json_key, no_regist):
         gsession.write_all_schedule(all_schedule)
 
 
-def _fetch_theater_schedule_list(session: OfficialSession) -> list[NotifySchedule]:
-    theater_schedule_list = session.fetch_schedule_theater()
+def _fetch_theater_schedule_list(
+    session: OfficialSession, verbose: bool = False
+) -> list[NotifySchedule]:
+    theater_schedule_list = session.fetch_schedule_theater(verbose=verbose)
+    if verbose:
+        print("all theater_schedule_list")
+        print(theater_schedule_list)
     theater_schedule_list = filter_theater_schedule_list(
         theater_schedule_list, keywords=["中井りか"], start_date=datetime.now()
     )
